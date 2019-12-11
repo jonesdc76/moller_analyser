@@ -1,0 +1,65 @@
+#!/bin/bash
+
+DIR=~/
+#FILE=grinchadc_
+FILE=moller_data_
+EXT=.dat
+MAXEVENTS=10000000
+STARTEVENT=0
+
+function usage() {
+   echo ""
+   echo "You need one argument:  the run number"
+   echo "Example:  newrun 1430"
+   echo "to analyze run 1430"
+   echo " "
+   echo "a 2nd arg is optional:  number of events to analyze"
+   echo "   newrun 1430 25000"
+   echo "   analyzes 25000 events starting at event 0"
+   echo " "
+   echo "a 3rd arg is optional:  starting event"
+   echo "   newrun 1430 25000 10"
+   echo "   analyzes 25000 events starting at event 10"
+   echo " "
+   echo "try again ...."
+
+   exit
+}
+
+if [ $# -lt 1 ] ; then
+   usage
+fi
+
+if [ $# -ge 1 ] ; then
+   RUN=$1
+fi
+
+if [ $# -ge 2 ] ; then
+   MAXEVENTS=$2
+fi
+
+if [ $# -ge 3 ] ; then
+   STARTEVENT=$3
+fi
+
+run=$1
+
+
+if [ -e $FILENAME ] ; then
+   :
+else
+   echo ""
+   echo "ERROR:  File $FILENAME does not exist"
+   echo ""
+   echo "try again ...."
+   exit
+fi
+
+echo " "
+echo "Analyzing run $run"
+
+
+echo ""
+
+./molana $run $MAXEVENTS $STARTEVENT
+
