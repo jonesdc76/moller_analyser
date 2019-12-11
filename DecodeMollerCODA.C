@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
   trADC->Branch("ievtype", &coda_event_type);
   trADC->Branch("iret", &ret);
   trADC->Branch("ntrig", &ntrig);
-  trADC->Branch("itrig", trig);
+  trADC->Branch("itrig", trig, "itrig[ntrig]/S");
   trADC->Branch("itick", &tick);
   trADC->Branch("nadc", &nadc);
   trADC->Branch("iadc", ADC, "iadc[nadc]/S");
