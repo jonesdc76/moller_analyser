@@ -1,35 +1,23 @@
-Simple example of an analysis code based on ROOT and C++
-to read a CODA file, unpack the ROCs and unpack the banks,
-then pick out my data and fill a histogram.
+CODA decoder for Hall A Moller polarimeter data based on R. Michael's
+simpleAna standalone code. -Don Jones, Dec. 2019
 
-An example of how to run:
+This folder contains all the files required to read the CODA binary and
+interpret it. Requires that two environment variables be set
+   MOLLER_DATA_DIR directory where CODA binary .dat files live
+   MOLLER_ROOTFILE_DIR directory where the created ROOT files are to be stored
 
-   Suppose run.dat is a link to mpd_204.dat
-   The run like this
-     ./newrun 204 10 > x.log
-   This will analyze run #204 for 10 events and put the
-   output into "x.log", a file.
-   Root file is ana_204.root with one histogram in it.
-OR
-   ./newrun 204 10 6 will analyze 10 events starting at event 6
+MollerDecodeCODA.C contains main and compiles to the executable molana.
+  Arguments: int run_number (number of the run used to construct the filename)
+             int n_events (optional number of events to analyze)
+	     int start_event (optional event to start analysis)
 
-
-
-R. Michaels, Oct 2016
-
-Ana_main.C
-    main analysis code.  It's what you mostly have to look at.
-    The executible is "xana".  See also "newrun".
+newrun is a bash script that calls molana and requires at least a run number
+  ./newrun 204 10 6 will analyze 10 events from run 204 starting at event 6
 
 Makefile
     to compile, type "make"
 
-newrun
-    frontend script.  To run type "./newrun 1610" to analyze 
-    run number 1610.  Obviously you'll need to control what is
-    in "newrun" -- to point to your data files, etc
-
-The rest are codes used to build the analyzer.
+Classes required to build the analyzer.
    et.h
    evio.C
    evio.h
