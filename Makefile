@@ -19,9 +19,9 @@ ifeq ($(OSNAME),SunOS)
    ROOTGLIBS     = $(shell root-config --glibs)
    CXX           = CC
 #   CXXFLAGS      = -O  -DSUNVERS -I$(ROOTSYS)/root/include
-   CXXFLAGS      = -O  -DSUNVERS 
+   CXXFLAGS      = -O  -DSUNVERS -std=c++11
    LD            = CC
-   LDFLAGS       = -g -D
+   LDFLAGS       = -g -D -std=c++11
    SOFLAGS       = -G
    CXXFLAGS     += $(ROOTCFLAGS)
    EVIO_LIB=libevio.a
@@ -59,15 +59,15 @@ ifeq ($(OSNAME),Linux)
 
    CXX           = g++
    CXXFLAGS      = -Wall  -fno-exceptions -fPIC  \
-                   -DLINUXVERS -I$(ROOTSYS)/include -O
+                   -DLINUXVERS -I$(ROOTSYS)/include -O -std=c++11
 
 # Linux with egcs
    INCLUDES      = -I$(ROOTSYS)/include 
    CXX           = g++
-   CXXFLAGS      = -O -Wall  -fno-exceptions  -fPIC $(INCLUDES)
+   CXXFLAGS      = -O -Wall  -fno-exceptions  -fPIC $(INCLUDES) -std=c++11
    CXXFLAGS     += -Wno-deprecated 
    LD            = g++
-   LDFLAGS       = 
+   LDFLAGS       = -std=c++11
    SOFLAGS       = -shared
 
    ifdef OLDROOT
