@@ -2,7 +2,12 @@ CODA decoder for Hall A Moller polarimeter data based on R. Michael's
 simpleAna standalone code. -Don Jones, Dec. 2019
 
 This folder contains all the files required to read the CODA binary and
-interpret it. Requires that two environment variables be set
+interpret it. User manuals for the TDC and scalers are included. For the TDC in
+particular this was critical in understanding the structure of the TDC data.
+
+Documentation for decoding the CODA binary is included in the slide show DecodeMollerCODA.pdf(pptx).
+
+Requires that two environment variables be set
 
     MOLLER_DATA_DIR directory where CODA binary .dat files live
    
