@@ -60,8 +60,10 @@ Short_t coda_data_type=0, coda_event_type=0, run = 0, run_CODA = 0;
 Int_t ret, nadc, ntdc, nsca, tick;
 Double_t unix_time = 0; //unix time calculated from start of run + 120 Hz CPU clock
 Int_t prev_ticks = 0; //scaler value for 120 Hz tick counter from previous cycle
+Int_t prev_clock = 0; //scaler value for 100 kHz clock counter from previous cycle
 static Int_t ntrig = NTRIG;
 Short_t trig[NTRIG];
+long nSca = 0;
 
 
 int main(int argc, char* argv[])
@@ -175,7 +177,6 @@ int main(int argc, char* argv[])
   // Loop over events
   //////////////////////////////////////////
   int status;
-
   for (int iev = 0; iev < evhi; iev++) {      
     if (iev > 0 && ((iev%1000)==0) ) printf("%d events\n",iev);
 
@@ -202,6 +203,7 @@ int main(int argc, char* argv[])
 	}
 	if(type == 32) {
 	  trSca->Fill();
+	  ++nSca;
 	}
       }
     }
@@ -268,13 +270,15 @@ int decode (int* data) {
   //Sync event
   if (coda_data_type == 1 && coda_event_type == 16) {
     unix_time = (double)data[2];
-    cout<<"Setting unix time from Sync to "<<unix_time<<endl;
+    printf("Setting unix time from Sync to %ld at scaler event %ld\n",
+	   (long)unix_time, nSca);
   }
 
   //Prestart event
   if (coda_data_type == 1 && coda_event_type == 17) {
     unix_time = (double) data[2];
-    cout<<"Setting unix time from Prestart to "<<unix_time<<endl;
+    printf("Setting unix time from Prestart to %ld at scaler event %ld\n",
+	   (long)unix_time, nSca);
     run_CODA = data[3];
     if(run_CODA != run){
       cout<<"Error. Run number mismatch. Exiting.\n";
@@ -285,19 +289,22 @@ int decode (int* data) {
   //Go event
   if (coda_data_type == 1 && coda_event_type == 18) {
     unix_time =  (double)data[2];
-    cout<<"Setting unix time from Go to "<<unix_time<<endl;
+    printf("Setting unix time from Go to %ld at scaler event %ld\n",
+	   (long)unix_time, nSca);
   }
 
   //Pause event
   if (coda_data_type == 1 && coda_event_type == 19) {
-    cout<<"Setting unix time from Pause to "<<unix_time<<endl;
     unix_time =  (double)data[2];
+    printf("Setting unix time from Pause to %ld\n at scaler event %ld",
+	   (long)unix_time, nSca);
   }
 
   //End event
   if (coda_data_type == 1 && coda_event_type == 20) {
-    cout<<"Setting unix time from End to "<<unix_time<<endl;
     unix_time = data[2];
+    printf("Setting unix time from End to %ld at scaler event %ld\n",
+	   (long)unix_time, nSca);
   }
 
   // Decoding for "physics" events
@@ -476,8 +483,19 @@ Int_t parseADCevent(int *data, int start_pos, int mol_type){
     }
     else if(i==2){
       tick = tmp;
-      unix_time += (tick - prev_ticks) / 120.0;
+      //Get time progression from the 100 kHz clock in scaler (subject to issues
+      //from deadtime and T_settle)
+      int clock = Scal[14];
+      //Get time progression from the 120 Hz CPU clock
+      double dt = (tick - (prev_ticks==0 ? tick : prev_ticks)) / 120.0;
+
+      // Uncomment if you want to use 100 kHz clock to interpolate
+      // between ticks when running at flip rate > 120Hz
+      //if(dt == 0)
+      //  dt += (clock - (prev_clock==0 ? clock : prev_clock)) / 1.0e5;
+      unix_time += dt;
       prev_ticks = tick;
+      prev_clock = clock;
     }
     else if(i==4)
       ret = tmp;
