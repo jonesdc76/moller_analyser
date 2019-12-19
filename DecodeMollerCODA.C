@@ -56,8 +56,10 @@ Int_t evlen, evnum;
 Int_t rdata[MAXDAT];
 Int_t Scal[NSCA_CH];
 Short_t ADC[NADC_CH], TDC_ch[NTDC_CH], TDC_ed[NTDC_CH], TDC[NTDC_CH];
-Short_t coda_data_type, coda_event_type, run = 0;
+Short_t coda_data_type=0, coda_event_type=0, run = 0, run_CODA = 0;
 Int_t ret, nadc, ntdc, nsca, tick;
+Double_t unix_time = 0; //unix time calculated from start of run + 120 Hz CPU clock
+Int_t prev_ticks = 0; //scaler value for 120 Hz tick counter from previous cycle
 static Int_t ntrig = NTRIG;
 Short_t trig[NTRIG];
 
@@ -144,6 +146,7 @@ int main(int argc, char* argv[])
   trSca->Branch("idtype", &coda_data_type);
   trSca->Branch("ievtype", &coda_event_type);
   trSca->Branch("iret", &ret);
+  trSca->Branch("unix_time", &unix_time);
   trSca->Branch("ntrig", &ntrig);
   trSca->Branch("itrig", trig, "itrig[ntrig]/S");
   trSca->Branch("itick", &tick);
@@ -157,6 +160,7 @@ int main(int argc, char* argv[])
   trADC->Branch("idtype", &coda_data_type);
   trADC->Branch("ievtype", &coda_event_type);
   trADC->Branch("iret", &ret);
+  trSca->Branch("unix_time", &unix_time);
   trADC->Branch("ntrig", &ntrig);
   trADC->Branch("itrig", trig, "itrig[ntrig]/S");
   trADC->Branch("itick", &tick);
@@ -261,8 +265,42 @@ int decode (int* data) {
     
   }
 
-  // Decoding for "physics" events
+  //Sync event
+  if (coda_data_type == 1 && coda_event_type == 16) {
+    unix_time = (double)data[2];
+    cout<<"Setting unix time from Sync to "<<unix_time<<endl;
+  }
 
+  //Prestart event
+  if (coda_data_type == 1 && coda_event_type == 17) {
+    unix_time = (double) data[2];
+    cout<<"Setting unix time from Prestart to "<<unix_time<<endl;
+    run_CODA = data[3];
+    if(run_CODA != run){
+      cout<<"Error. Run number mismatch. Exiting.\n";
+      exit(0);
+    }
+  }
+
+  //Go event
+  if (coda_data_type == 1 && coda_event_type == 18) {
+    unix_time =  (double)data[2];
+    cout<<"Setting unix time from Go to "<<unix_time<<endl;
+  }
+
+  //Pause event
+  if (coda_data_type == 1 && coda_event_type == 19) {
+    cout<<"Setting unix time from Pause to "<<unix_time<<endl;
+    unix_time =  (double)data[2];
+  }
+
+  //End event
+  if (coda_data_type == 1 && coda_event_type == 20) {
+    cout<<"Setting unix time from End to "<<unix_time<<endl;
+    unix_time = data[2];
+  }
+
+  // Decoding for "physics" events
   if (coda_data_type == 16 && coda_event_type <15) {
 
     // First find pointers to ROCs.
@@ -438,6 +476,8 @@ Int_t parseADCevent(int *data, int start_pos, int mol_type){
     }
     else if(i==2){
       tick = tmp;
+      unix_time += (tick - prev_ticks) / 120.0;
+      prev_ticks = tick;
     }
     else if(i==4)
       ret = tmp;
