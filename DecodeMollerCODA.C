@@ -3,14 +3,14 @@
 // R. Michaels, Oct 2016
 // Don Jones-- Dec 2019 Added argument to analyze starting at event number
 #define MAXLEN  200000
-#define MAXROC    50
-#define MAXBANK   20
+#define MAXROC  50
+#define MAXBANK 20
 #define MAXRAW  6000
-#define MAXDAT   500
-#define NADC_CH 24
-#define NTDC_CH 32
-#define NSCA_CH 32
-#define NTRIG 8
+#define MAXDAT  500
+#define NADC_CH 24   //2 12-channel LeCroy 2249A
+#define NTDC_CH 512  //32-channel LeCroy 2277 @ maximum of 16 events/channel. Not all channels are used
+#define NSCA_CH 32   //2 16-channel LeCroy 1151E scalers
+#define NTRIG   8
 #define ERRORFLAG -9999
 
 #include <iostream>
@@ -365,18 +365,18 @@ int decode (int* data) {
 
     pos = rocpos[myroc]+2;
     if(pos+2 >= evlen){
-      cout<<"ERROR: event length incorrect!"<<endl;
+      cout<<"ERROR: event length incorrect at event number "<<evnum<<endl;
       return -1;
     }
     mol_type = data[pos++];// Moller data type scaler=32, adc=35, 36 or 37
 
     if(mol_type >= 35 && mol_type <= 37){
       
-      parseADCevent(data, pos, mol_type);
+      if(parseADCevent(data, pos, mol_type) < 0)return -1;
 
     }else if(mol_type == 32){
       
-      parseScalerEvent(data, pos);
+      if(parseScalerEvent(data, pos) < 0)return -1;
       
     }else{
       
@@ -396,13 +396,14 @@ Int_t parseADCevent(int *data, int start_pos, int mol_type){
   Int_t pos = start_pos;
   Int_t nchan = data[pos++];   // number of channels to read
   if(nchan > NADC_CH){
-    cout<<"ERROR: too many ADC hits"<<endl;
+    cout<<"ERROR: too many ADC hits at event number "<<evnum<<endl;
+    return -1;
     exit(0);
   }
   for(int i=0;i<NADC_CH;++i)ADC[i] = ERRORFLAG;
   for(int i=0; i<nchan; ++i){
     if(pos >= evlen){
-      cout<<"Error. End of event encountered while reading ADC."<<endl;
+      cout<<"Error. End of event encountered while reading ADC at event number "<<evnum<<endl;
       exit(0);
     }
     ADC[i] = (Short_t)data[pos++];
@@ -417,12 +418,13 @@ Int_t parseADCevent(int *data, int start_pos, int mol_type){
 
   nchan = data[pos++];
   if(nchan > NTDC_CH){
-    cout<<"ERROR: too many TDC hits"<<endl;
+    cout<<"ERROR: too many TDC hits at event number "<<evnum<<endl;
+    return -1;
     exit(0);
   }
   for(int i=0; i<nchan; ++i){
     if(pos >= evlen){
-      cout<<"Error. End of event encountered while reading TDC."<<endl;
+      cout<<"Error. End of event encountered while reading TDC at event number "<<evnum<<endl;
       exit(0);
     }
     Int_t tmp = data[pos++];
@@ -440,12 +442,13 @@ Int_t parseADCevent(int *data, int start_pos, int mol_type){
   if(mol_type == 37){
     nchan = data[pos++];
     if(nchan > NTDC_CH){
-      cout<<"Error. Too many TDC hits."<<endl;
+      cout<<"Error. Too many TDC hits at event number "<<evnum<<endl;
+      return -1;
       exit(0);
     }
     for(int i=0; i<nchan; ++i){
       if(pos >= evlen){ 
-	cout<<"Error. End of event encountered while reading TDC 2."<<endl;
+	cout<<"Error. End of event encountered while reading TDC 2 at event number "<<evnum<<endl;
 	exit(0);
       }
       Int_t tmp = data[pos++];
@@ -467,8 +470,7 @@ Int_t parseADCevent(int *data, int start_pos, int mol_type){
   nchan = data[pos++];
   for(int i=0; i<nchan; ++i){
     if(pos >= evlen){
-      cout<<"Error. End of event encountered while reading status record."
-	  <<endl;
+      cout<<"Error. End of event encountered while reading status record at event number "<<evnum<<endl;
       if(debug){
 	cout<<"nchan = "<<nchan<<" pos= "<<pos<<" data["<<pos<<"]= "<<data[pos]
 	    <<endl;
@@ -511,12 +513,13 @@ Int_t parseScalerEvent(int *data, int start_pos){
   Int_t  nchan = data[pos++];
   for(int i=0;i<NSCA_CH;++i)Scal[i] = ERRORFLAG;
   if(nchan > NSCA_CH){
-    cout<<"ERROR: too many scaler hits."<<endl;
+    cout<<"ERROR: too many scaler hits at event number "<<evnum<<endl;
+    return -1;
     exit(0);
   }
   for(int i=0; i<nchan; ++i){
     if(pos+1 >= evlen){
-      cout<<"Error. End of event encountered while reading scalers.";
+      cout<<"Error. End of event encountered while reading scalers at event number "<<evnum<<endl;
       cout<<endl;
       exit(0);
     }
@@ -530,5 +533,6 @@ Int_t parseScalerEvent(int *data, int start_pos){
   //appended to the end of each scaler event. Perhaps this is just the way CODA
   //forces the writeout of a status record. So let's parse an ADC event...
   int mol_type = data[pos++];
-  return parseADCevent(data, pos, mol_type);
+  return  parseADCevent(data, pos, mol_type);
+
 }
