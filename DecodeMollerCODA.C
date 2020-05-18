@@ -118,10 +118,10 @@ int main(int argc, char* argv[])
 		       gSystem->Getenv("MOLLER_ROOTFILE_DIR"), run);
     }else{
        //Input filename as string
-       filename = Form("%s/%s", gSystem->Getenv("MOLLER_DATA_DIR"), str);
+      filename = Form("%s/%s", gSystem->Getenv("MOLLER_DATA_DIR"), str.Data());
        //strip file type .dat
        str.Remove(str.Last('.'));
-       rootfname = Form("%s/%s.root", gSystem->Getenv("MOLLER_ROOTFILE_DIR"), argv[1]);
+       rootfname = Form("%s/%s.root", gSystem->Getenv("MOLLER_ROOTFILE_DIR"), str.Data());
        //Extract the run number
        TString rn = "";
        for(int i=0;i<str.Length();++i){
@@ -240,9 +240,13 @@ int main(int argc, char* argv[])
  end1:
   
   coda->codaClose();
-
-  file->Write();
-  file->Close();
+  if(nSca > 0){
+    file->Write();
+    file->Close();
+  }else{
+    file->Close();
+    gSystem->Exec(Form("rm -f %s",rootfname.Data()));
+  }
   return 0;
 
 }; //end of main function

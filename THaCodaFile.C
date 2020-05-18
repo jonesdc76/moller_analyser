@@ -48,7 +48,7 @@ ClassImp(THaCodaFile)
   int THaCodaFile::codaOpen(TString fname) {  
        init(fname);
        int status = evOpen((char *)fname.Data(),(char *)"r", handle);
-       staterr("open",status);
+       staterr("open",status,false);
        return status;
   };
 
@@ -250,7 +250,7 @@ Finish:
 
 
 
-void THaCodaFile::staterr(TString tried_to, int status) {
+void THaCodaFile::staterr(TString tried_to, int status, bool allow_exit) {
 // staterr gives the non-expert user a reasonable clue
 // of what the status returns from evio mean.
 // Note: severe errors can cause job to exit(0)
@@ -262,7 +262,10 @@ void THaCodaFile::staterr(TString tried_to, int status) {
        cout << "   1.  You mistyped the name of file ?" << endl;
        cout << "   2.  The file has length zero ? " << endl;
        cout << "Job aborting !! " << endl;
-       exit(0);
+       if(allow_exit)
+	 exit(0);
+       else 
+	 return;
     }
     switch (status) {
       case S_EVFILE_TRUNC :
