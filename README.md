@@ -17,15 +17,18 @@ MollerDecodeCODA.C contains main and compiles to the executable molana.
 
   Arguments: 
             
-	    int run_number (number of the run used to construct the filename)
+	    1. Either int run_number (number of the run used to construct the filename)
+	       or char* full name of file excluding directory path. Program will first
+	       see if you input an integer before trying to interpret input as a filename.
 	    
-	    int n_events (optional number of events to analyze)
+	    2. int n_events (optional number of events to analyze)
 	     
-	    int start_event (optional event to start analysis)
+	    3. int start_event (optional event to start analysis)
 
 newrun is a bash script that calls molana and requires at least a run number
 
    ./newrun 204 10 6 will analyze 10 events from run 204 starting at event 6
+   ./newrun moller_data_17000.dat will analyze the full run 17000.
 
 Makefile
     to compile, type "make"
