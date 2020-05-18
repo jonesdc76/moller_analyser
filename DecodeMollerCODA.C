@@ -101,12 +101,40 @@ int main(int argc, char* argv[])
   //Process command line arguments
   ////////////////////////////////////////
   if (argc > 1){
-    run = atoi(argv[1]);
-    cout << "Processing run number "<<run<<endl;
-    filename = Form("%s/moller_data_%i.dat",
-		    gSystem->Getenv("MOLLER_DATA_DIR"), run);
-    rootfname = Form("%s/moller_data_%i.root",
-		     gSystem->Getenv("MOLLER_ROOTFILE_DIR"), run);
+    //Can either take full filename or create default filename from run number
+    TString str = argv[1];
+    bool  isrunnum = true;
+    for( int i=0; i<str.Length(); ++i){
+      if (isdigit(str[i]) == false) 
+            isrunnum = false; 
+    }
+    if(isrunnum){
+      //Default filename from run number
+      run = atoi(argv[1]);
+      cout << "Processing run number "<<run<<endl;
+      filename = Form("%s/moller_data_%i.dat",
+		      gSystem->Getenv("MOLLER_DATA_DIR"), run);
+      rootfname = Form("%s/moller_data_%i.root",
+		       gSystem->Getenv("MOLLER_ROOTFILE_DIR"), run);
+    }else{
+       //Input filename as string
+       filename = Form("%s/%s", gSystem->Getenv("MOLLER_DATA_DIR"), str);
+       //strip file type .dat
+       str.Remove(str.Last('.'));
+       rootfname = Form("%s/%s.root", gSystem->Getenv("MOLLER_ROOTFILE_DIR"), argv[1]);
+       //Extract the run number
+       TString rn = "";
+       for(int i=0;i<str.Length();++i){
+	 if(isdigit(str[i])) rn.Append(str[i]);  
+       }
+       run = rn.Atoi();
+       if(run < 1000){
+	 cout<<"Failed to extract run number from file name. Please input run number: "<<endl;
+	 cin>>run;	
+       }else{
+       	  cout << "Extracted run number from file name: " << run << endl;
+       }
+    }
     cout << "Processing file "<<filename.Data()<<endl;
   }else{
     usage();
